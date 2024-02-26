@@ -1,8 +1,14 @@
 # System-Wide Monitoring Program (SWMP) Annual 2023 Report
 
-Annual report on the long-term water quality and weather data collected as part of the System-Wide Monitoring Program (SWMP) at the GTM Research Reserve for 2023.
+This open source report provides a baseline summary of the three longest running components of the SWMP at the GTMNERR: continuous water quality, discrete water quality, and weather through December 2023. This report will be updated in July 2024 after the collected data has undergone the secondary annual quality assurance and quality control (QAQC) process. For more information on the SWMP QAQC process, please visit http://cdmo.baruch.sc.edu/data/qaqc.cfm.
 
-*Stay tuned: This report will be developed and released in February 2024.*
+## Summary
+
+
+
+## Suggested Citation
+
+Kimmel, S.D., K. Petrinec, M. Howkins, and N. Dix. 2024. Guana Tolomato Matanzas National Estuarine Research Reserve 2023 Annual System-Wide Monitoring Program Report. Guana Tolomato Matanzas National Estuarine Research Reserve, Ponte Vedra Beach, FL
 
 ## LICENSE
 

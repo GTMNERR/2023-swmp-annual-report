@@ -1,0 +1,15 @@
+---
+execute: 
+  warning: false
+  error: false
+---
+
+# Results {#sec-results}
+
+All analyses were conducted in R using RStudio:
+
+```{r}
+#| label: session-info
+#| echo: false
+sessionInfo()
+```

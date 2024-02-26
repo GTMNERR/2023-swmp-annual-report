@@ -1,0 +1,267 @@
+---
+execute: 
+  warning: false
+  error: false
+filters: 
+  - lightbox
+lightbox: auto
+bibliography: references.bib
+---
+
+# Environmental {#sec-environmental}
+
+```{r}
+#| label: data-load
+#| include: false
+library(here)
+
+source(here::here('R', '00_loadpackages.R'))
+
+load(here('output','data', 'MET.Rdata'))
+
+load(here('output','data', 'pi_wq.Rdata'))
+load(here('output','data', 'ss_wq.Rdata'))
+load(here('output','data', 'fm_wq.Rdata'))
+load(here('output','data', 'pc_wq.Rdata'))
+```
+
+The following includes variables that establish the estuarine setting: rainfall, light intensity, water temperature, and salinity. These variables are driven primarily by climatic patterns and largely influence water quality condition.
+
+## Summary
+
+In July, northeast Florida received consistent and large amounts of precipitation (@fig-rainfall). Almost 61% of days in July had detectable levels of rainfall (@fig-rainfall-2) and it also had the most amount of heavy rain (7.6 - 50 mm/hr) (@fig-rainfall-3). After the summer rains, however, early fall (September - October) was pretty minimal with very few rain days (rain greater than 1 mm) (@fig-rainfall-2). However, even though there were not many rainy days in October at the weather station, all the rainfall for the month was collected on one day: October 12, 2023 (@fig-rainfall-1). Nor'easters brought heavy rainfall in [March](https://www.weather.gov/bgm/pastWinterMarch142023), [April](https://flaglerlive.com/strong-noreaster-conditions-and-erosion-expected-on-easter-sunday-and-monday/), June, and December (@fig-rainfall-1; @fig-rainfall-2). These events are discussed in further detail in @sec-neer.
+
+In 2023, the average daily amount of light intensity for each month is shown in @fig-lightintensity. There was less intense light in the extreme months of the year (Jan, Feb, Nov, Dec) and more in the mid-months of the year. The most intense light was observed between April - August. 
+
+Daily average air temperatures were high and variable during the first part of the year, particularly in February, but fell within the historical range for the GTMNERR station through October (@fig-range-atemp). October also experienced a few temperature drops outside of the average range (@fig-range-atemp). More discussions on temperature anomalies can be found in @sec-tempanomalies.
+
+Water temperatures have generally been on the higher end of the range throughout the year (@fig-range-temp). Temperatures have been most variable and lower at stations most influenced by freshwater runoff (Pine Island and Pellicer Creek). Daily averages fell within historical ranges at the stations within June, but all stations experienced higher temperatures in July and August (@fig-range-temp). The cooler weather in October also is evident in the water temperatures as clear drops in daily averages were observed at all four stations, though more pronounced at Pellicer Creek, the shallowest of the four stations (@fig-range-temp-4).
+
+The heavy summer rains brought salinities at all stations much lower than their average daily ranges (@fig-range-sal), particularly at the stations farthest from the inlets (@fig-range-sal-1; @fig-range-sal-4). Nor'easters and fall "King Tides" did help to raise salinities often at most sites, particularly April in Pellicer Creek (@fig-range-sal-4) and September-October at all sites.
+
+## Data
+
+### Rainfall
+
+Data is  presented as quarterly totals, then monthly, and then daily totals as "rain days" which are categorized into Wet (\<10 mm), Very Wet (20-29 mm), and Extremely Wet (\>30 mm) days. 
+
+```{r}
+#| label: fig-rainfall
+#| echo: false
+#| fig.cap: Rainfall at the Pellicer Creek weather station.
+#| fig.subcap:
+#|    - "Quarterly total precipitation for 2023."
+#|    - "Monthly total precipitation for 2023."
+#|    - "Daily rainfall totals for days with more than 1mm of day."
+#|    - "Hourly rainfall intensity counts by category per month."
+#| layout-ncol: 2
+
+
+# QUARTERLY ----
+
+MET |> 
+  SWMPrExtension::seasonal_barplot(param = 'totprcp',
+                                   season_grps = list(c(1,2,3), 
+                                                      c(4,5,6), 
+                                                      c(7,8,9), 
+                                                      c(10, 11, 12)),
+                                   season_names = c('Jan-Mar', 
+                                                    'Apr-Jun', 
+                                                    'Jul-Sep', 
+                                                    'Oct-Dec'),
+                                   hist_rng = c(2003,2023),
+                                   hist_avg = TRUE,
+                                   converted = F) + 
+  theme(axis.text.x = element_text(angle = 45,
+                                   vjust = 0.6),
+        axis.text = element_text(color = "black"))
+
+
+## MONTHLY ----
+
+MET |> 
+  filter(datetimestamp > '2023-01-01 00:15') %>%
+  mutate(date = as.Date(datetimestamp),
+         month = lubridate::month(date, label = T)) %>% 
+  group_by(month) %>%
+  summarise(sum = sum(totprcp, na.rm = T)) %>%
+  # summarise(mean = mean(sum)) %>%
+  ggplot(aes(x = month, y = sum)) +
+  geom_col(fill = "#0075AC") +
+  geom_hline(yintercept = 96.4, linewidth = 1, linetype = "dashed", color = "grey50") +
+  geom_text(aes(label = sum), vjust = 1.5, color = "white") +
+  scale_y_continuous(expand = c(0,0)) +
+  theme_classic() +
+  theme(axis.text = element_text(color = "black", size = 12),
+        axis.title.y = element_text(color = "black", size = 12)) +
+  geom_text(aes(x = "Feb", y = 105), 
+            label = "96.4 mm",
+            size = 4.5,
+            color = "grey50") +
+  labs(x = '',
+       y = 'Precipitation (mm)',
+       caption = "Hortizontal line represents monthly average.")
+
+## DAILY ----
+
+fun_in <- function(x) sum(x, na.rm = TRUE)
+
+MET |> 
+  filter(datetimestamp > '2023-01-01 00:15') %>%
+  aggreswmp(by = "days", FUN = fun_in, params = "totprcp") %>% 
+  filter(totprcp >= 1) %>% 
+  mutate(date = as.Date(datetimestamp),
+         month = lubridate::month(date, label = T),
+         prcp_in = totprcp * 0.0393701,
+         prcp_in = round(prcp_in, digits = 1),
+         wet = case_when(totprcp < 10 ~ "Not Very Wet (<10mm)",
+                         totprcp >= 10 & totprcp < 20 ~ "Wet (10-19mm)",
+                         totprcp >= 20 & totprcp < 30 ~ "Very Wet (20-29mm)",
+                         totprcp > 30 ~ "Extremely Wet (>30mm)"),
+         wet = factor(wet, levels = c("Not Very Wet (<10mm)",
+                                      "Wet (10-19mm)",
+                                      "Very Wet (20-29mm)",
+                                      "Extremely Wet (>30mm)"))) %>% 
+  ggplot(aes(x = date, y = totprcp)) +
+  geom_segment(aes(x = date, xend = date, y = 0, yend = totprcp),
+               size = 1) +
+  geom_point(aes(color = wet), size =2, bg = 4) +
+  khroma::scale_color_okabeito() + # change color codes
+  scale_y_continuous(expand = c(0,0), limits = c(0,70)) +
+  scale_x_date(date_breaks = "1 month", date_labels = "%b") +
+  theme_classic() +
+  theme(axis.text = element_text(color = "black", size = 12),
+        axis.title.y = element_text(color = "black", size = 12)) +
+  labs(x = '',
+       y = 'Total Daily Precipitation (mm)',
+       color = "Amount of Rain")
+
+## INTENSITY ----
+
+# rainfall intensity 
+# in mm/hr
+
+MET |>
+  filter(datetimestamp > '2023-01-01 00:15') %>% 
+  aggreswmp(by = "hours", FUN = fun_in, params = "totprcp") %>% 
+  rename(intensity = totprcp) %>% 
+  mutate(date = lubridate::date(datetimestamp),
+         month = lubridate::month(datetimestamp, label = TRUE),
+         intensity_cat = case_when(intensity == 0 ~ "No Rain (0 mm/hr)",
+                                    intensity > 0 & intensity < 2.5 ~ "Light Rain (<2.5 mm/hr)",
+                                    intensity >= 2.5 & intensity < 7.6 ~ "Moderate Rain (2.5-7.6 mm/hr)",
+                                    intensity >= 7.6 & intensity < 50 ~ "Heavy Rain (7.6-50 mm/hr)",
+                                    intensity > 30 ~ "Intense Rain (>50mm/hr)"),
+         intensity_cat = factor(intensity_cat, levels = c("No Rain (0 mm/hr)",
+                                                          "Light Rain (<2.5 mm/hr)",
+                                                          "Moderate Rain (2.5-7.6 mm/hr)",
+                                                          "Heavy Rain (7.6-50 mm/hr)",
+                                                          "Intense Rain (>50mm/hr)")
+                                )
+         ) %>% 
+  # group_by(month, intensity_cat) %>%
+  # count() %>%
+  filter(intensity_cat != "No Rain (0 mm/hr)") %>% 
+  ggplot() +
+  geom_bar(aes(x = month, fill = intensity_cat)) +
+  ggthemes::scale_fill_colorblind() +
+  scale_y_continuous(expand = c(0,0)) +
+  theme_classic() +
+  theme(axis.text = element_text(color = "black", size = 12),
+        axis.title.y = element_text(color = "black", size = 12)) +
+  labs(x = "",
+       y = "Amount of Hours",
+       fill = "Intensity Category")
+```
+
+### Light Intensity
+
+The plot below is interactive. Clicking on elements in the legend (months) will select or deselect months of interest. Additionally, the axis can be adjusted by selecting portions of the plot to isolate.
+
+```{r}
+#| label: fig-lightintensity
+#| echo: false
+#| fig.cap: "Total light intensity by time of day for each month based on photosynthetically active radiation data collected at the Pellicer Creek weather station."
+
+ggplotly(
+MET %>% 
+  filter(datetimestamp > '2023-01-01 00:15') %>% 
+  select(datetimestamp, totpar) %>% 
+  mutate(month = lubridate::month(datetimestamp, label = T), 
+         day = lubridate::day(datetimestamp),
+         hour = lubridate::hour(datetimestamp),
+         minute = lubridate::minute(datetimestamp),
+         time = format(as.POSIXct(datetimestamp), format = "%H:%M")) %>% 
+  group_by(month, time) %>% 
+  summarize(intensity = sum(totpar, na.rm = T)) %>% 
+  ungroup() %>% 
+  mutate(time = strptime(time, format = "%H:%M", tz = ""),
+         datetime = as.POSIXct(time)) %>% 
+  ggplot(aes(x = datetime, y = intensity, group = month)) +
+  geom_line(aes(color = month)) +
+  scale_x_datetime(date_breaks = "hours", 
+                   date_labels = "%H:%M") +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
+        axis.text = element_text(color = "black")) +
+  labs(x = "Time of Day (HH:MM)",
+       y = "Intensity of Photosynthetically Active Radiation (mMol/m-2)")
+)
+```
+
+### Temperature
+
+Air and water temperatures are presented as daily averages (blue line) with historic ranges (daily range and average daily range) provided in shades of gray. 
+
+```{r}
+#| label: fig-range-atemp
+#| echo: false
+#| fig.cap: "Historical daily range of air temperature at the SWMP weather station with current year daily average overlaid in blue."
+
+historical_daily_range(MET, param = 'atemp', target_yr = 2023)
+
+```
+
+```{r}
+#| label: fig-range-temp
+#| echo: false
+#| fig.cap: Historical daily range of water temperature at each SWMP water quality station with current year daily average overlaid in blue.
+#| fig.subcap:
+#|    - "Pine Island"
+#|    - "San Sebastian"
+#|    - "Fort Matanzas"
+#|    - "Pellicer Creek"
+#| layout-ncol: 2
+
+historical_daily_range(pi, param = 'temp', target_yr = 2023)
+
+historical_daily_range(ss, param = 'temp', target_yr = 2023)
+
+historical_daily_range(fm, param = 'temp', target_yr = 2023)
+
+historical_daily_range(pc, param = 'temp', target_yr = 2023)
+```
+
+### Salinity
+
+```{r}
+#| label: fig-range-sal
+#| echo: false
+#| fig.cap: Historical daily range of salinity at each SWMP water quality station with current year daily average overlaid in blue.
+#| fig.subcap:
+#|    - "Pine Island"
+#|    - "San Sebastian"
+#|    - "Fort Matanzas"
+#|    - "Pellicer Creek"
+#| layout-ncol: 2
+
+historical_daily_range(pi, param = 'sal', target_yr = 2023)
+
+historical_daily_range(ss, param = 'sal', target_yr = 2023)
+
+historical_daily_range(fm, param = 'sal', target_yr = 2023)
+
+historical_daily_range(pc, param = 'sal', target_yr = 2023)
+```
+
+

@@ -1,0 +1,19 @@
+# Welcome {.unnumbered}
+
+This open source report provides a baseline summary of the three longest running components of the System-Wide Monitoring Program (SWMP) at the Guana Tolomato Matanzas National Estuarine Research Reserve: continuous water quality, discrete water quality, and weather through December 2023.
+
+## Summary {.unnumbered}
+
+
+
+# Citation {.unnumbered}
+
+Kimmel, S.D., K. Petrinec, M. Howkins, and N. Dix. 2024. Guana Tolomato Matanzas National Estuarine Research Reserve 2023 Annual System-Wide Monitoring Program Report. Guana Tolomato Matanzas National Estuarine Research Reserve, Ponte Vedra Beach, FL
+
+```{=openxml}
+<w:p><w:r><w:br w:type="page"/></w:r></w:p>
+```
+
+::: callout-important
+This report is will be updated in July 2024 after the collected data has undergone the secondary annual quality assurance and quality control (QAQC) process. For more information on the SWMP QAQC process, please visit <http://cdmo.baruch.sc.edu/data/qaqc.cfm>.
+:::
