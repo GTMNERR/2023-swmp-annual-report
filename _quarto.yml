@@ -9,12 +9,23 @@ book:
   cover-image-alt: |
     Overlooking marsh with grasses and mangrove trees and pine forest in the background.
   
+  date: 2024-03-01
+  
   author:
     - name: Shannon Dunnigan Kimmel
+      orcid: 0009-0004-6404-7008
+      email: Shannon.Dunnigan@FloridaDEP.gov
     - name: Kathryn Petrinec
+      email: Kathryn.Petrinec@FloridaDEP.gov
     - name: Megan Howkins
+      email: Megan.Howkins@FloridaDEP.gov
     - name: Nikki Dix
-    
+      orcid: 0000-0002-0063-5167
+      email: Nikki.Dix@FloridaDEP.gov
+      corresponding: true
+      
+  license: "CC BY-SA"
+  
   chapters:
     - index.qmd
     
